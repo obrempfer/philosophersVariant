@@ -1,8 +1,26 @@
-# Philosophers' Chess — rules prototype v1
+# Philosophers' Chess — playable prototype v1
 
 This package is the executable rules oracle for the first version of Philosophers' Chess. It intentionally lives
 beside the Lichess UI packages while the rules are being refined. Once the behavior is stable, the same rules can be
 implemented in `scalachess` for the server and exposed through the Lichess game UI.
+
+## Play in the browser
+
+Start the local web app from the repository root:
+
+```bash
+pnpm --filter philosophers dev
+```
+
+Then open [http://127.0.0.1:4173](http://127.0.0.1:4173). The app has two ways to enforce the same moral rules:
+
+- **Strict movement** only shows morally legal destination squares. A prohibited order cannot be selected, just as a
+  king cannot be moved into check.
+- **Three strikes** shows every destination allowed by ordinary chess. A morally illegal order is refused, the piece
+  returns to its square, and the player receives a strike. A third strike loses the game.
+
+Both modes mark endangered pieces on the board and explain the current duty of care beside it. Promotion currently
+defaults to a queen.
 
 ## Danger
 
@@ -33,8 +51,9 @@ prevents moving a defender away when doing so creates avoidable danger.
 
 - Ordinary chess determines movement, check, checkmate, stalemate, castling, en passant, and promotion.
 - The least-avoidable-harm filter is applied on top of ordinary legal moves.
-- An attempted move rejected by either ruleset leaves the board unchanged and gives the player one strike.
-- A player's third strike loses the game.
+- In three-strike mode, an attempted move rejected by either ruleset leaves the board unchanged and gives the player
+  one strike. A player's third strike loses the game.
+- In strict mode, the UI prevents moral violations from being selected.
 - The command-line prototype accepts SAN (`Nf3`, `O-O`) or UCI (`g1f3`) moves.
 
 Run the prototype from the repository root:

@@ -471,9 +471,22 @@ importers:
 
   ui/philosophers:
     dependencies:
+      '@lichess-org/chessground':
+        specifier: ^10.1.1
+        version: 10.1.1
       chessops:
         specifier: ^0.15.1
         version: 0.15.1
+    devDependencies:
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+      esbuild:
+        specifier: ^0.28.0
+        version: 0.28.0
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
 
   ui/puzzle:
     dependencies:

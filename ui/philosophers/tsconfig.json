@@ -2,6 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "rootDir": ".",
     "types": ["lichess", "node"]
-  }
+  },
+  "include": ["scripts/**/*.ts", "src/**/*.ts"]
 }

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A playable prototype of Philosophers' Chess, where every move must respect the lives under your command."
+    />
+    <title>Philosophers' Chess</title>
+    <link rel="stylesheet" href="./app.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">A moral chess experiment</p>
+          <h1>Philosophers’ Chess</h1>
+          <p class="hero-copy">No piece should be ordered into avoidable danger.</p>
+        </div>
+        <div class="mode-control" aria-label="Play mode">
+          <label for="mode">Rules mode</label>
+          <select id="mode">
+            <option value="strict">Strict movement</option>
+            <option value="strikes">Three strikes</option>
+          </select>
+        </div>
+      </header>
+
+      <section class="play-layout">
+        <div class="board-column">
+          <div class="turn-strip">
+            <span id="turn-marker" class="turn-marker" aria-hidden="true"></span>
+            <strong id="turn-label">White to move</strong>
+            <span id="legal-count"></span>
+          </div>
+          <div class="board-frame">
+            <div id="board" class="cg-wrap" aria-label="Chess board"></div>
+          </div>
+          <div class="board-actions">
+            <button id="reset" type="button">New game</button>
+            <button id="flip" class="secondary" type="button">Flip board</button>
+          </div>
+        </div>
+
+        <aside class="side-panel">
+          <section class="mode-card">
+            <p class="panel-label">Current doctrine</p>
+            <h2 id="mode-title">Strict movement</h2>
+            <p id="mode-copy"></p>
+          </section>
+
+          <section id="message" class="message neutral" aria-live="polite">
+            Select a piece to see the orders it may accept.
+          </section>
+
+          <section id="strikes-panel" class="strikes" hidden>
+            <div><span>White</span><strong id="white-strikes">● ● ●</strong></div>
+            <div><span>Black</span><strong id="black-strikes">● ● ●</strong></div>
+          </section>
+
+          <section class="danger-card">
+            <div class="section-heading">
+              <div>
+                <p class="panel-label">Duty of care</p>
+                <h2>Pieces in danger</h2>
+              </div>
+              <span id="danger-count" class="count-pill">0</span>
+            </div>
+            <div id="danger-list" class="danger-list"></div>
+          </section>
+
+          <section class="history-card">
+            <div class="section-heading">
+              <div>
+                <p class="panel-label">Orders carried out</p>
+                <h2>Move history</h2>
+              </div>
+            </div>
+            <ol id="move-list" class="move-list"></ol>
+          </section>
+        </aside>
+      </section>
+
+      <footer>
+        <strong>Least avoidable harm:</strong> achieve complete safety when possible; otherwise never add
+        avoidable danger.
+      </footer>
+    </main>
+  </body>
+</html>

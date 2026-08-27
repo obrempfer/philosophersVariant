@@ -3,9 +3,17 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@lichess-org/chessground": "^10.1.1",
     "chessops": "^0.15.1"
   },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "esbuild": "^0.28.0",
+    "tsx": "^4.23.12"
+  },
   "scripts": {
+    "build:web": "tsx scripts/build.ts",
+    "dev": "tsx scripts/dev.ts",
     "play": "tsx src/cli.ts"
   },
   "exports": {

@@ -1,0 +1,374 @@
+@import '@lichess-org/chessground/assets/chessground.base.css';
+@import '@lichess-org/chessground/assets/chessground.brown.css';
+@import '@lichess-org/chessground/assets/chessground.cburnett.css';
+
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  background: #0e1618;
+  color: #edf2ed;
+  --ink: #edf2ed;
+  --muted: #9eaca7;
+  --panel: rgba(28, 42, 42, 0.9);
+  --panel-strong: #1f3130;
+  --line: rgba(211, 226, 216, 0.13);
+  --gold: #d8ad62;
+  --gold-bright: #f1cf89;
+  --red: #d86656;
+  --green: #65aa7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(84, 128, 103, 0.16), transparent 32rem),
+    radial-gradient(circle at 88% 90%, rgba(174, 121, 56, 0.12), transparent 30rem), #0e1618;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+button,
+select {
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: var(--gold);
+  color: #17201c;
+  font-weight: 750;
+}
+
+button {
+  padding: 0.72rem 1rem;
+  cursor: pointer;
+}
+
+button:hover,
+select:hover {
+  background: var(--gold-bright);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--ink);
+}
+
+button.secondary:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.app-shell {
+  width: min(1220px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 1.5rem;
+}
+
+.hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.4rem;
+}
+
+.eyebrow,
+.panel-label {
+  margin: 0 0 0.35rem;
+  color: var(--gold-bright);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0.25rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.3rem, 6vw, 4.5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+h2 {
+  margin-bottom: 0.45rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.hero-copy,
+.mode-card p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.mode-control {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.mode-control label {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.mode-control select {
+  padding: 0.72rem 2.2rem 0.72rem 0.85rem;
+  cursor: pointer;
+}
+
+.play-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 1.35rem;
+  align-items: start;
+}
+
+.board-column,
+.side-panel > section {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 1.2rem 4rem rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(14px);
+}
+
+.board-column {
+  overflow: hidden;
+  border-radius: 1.1rem;
+}
+
+.turn-strip,
+.board-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 1rem;
+}
+
+.turn-strip {
+  border-bottom: 1px solid var(--line);
+}
+
+.turn-strip #legal-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.turn-marker {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid #4e5c58;
+  border-radius: 50%;
+  background: #f4f1e6;
+}
+
+.turn-marker.black {
+  background: #202726;
+}
+
+.board-frame {
+  padding: clamp(0.6rem, 1.5vw, 1rem);
+  background: #111a1a;
+}
+
+.cg-wrap {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.45rem;
+  box-shadow: 0 0.8rem 2.5rem rgba(0, 0, 0, 0.38);
+}
+
+cg-board {
+  border-radius: 0.45rem;
+}
+
+cg-board square.danger-square {
+  background: radial-gradient(circle, rgba(190, 45, 35, 0.15) 20%, rgba(190, 45, 35, 0.62) 100%);
+  box-shadow: inset 0 0 0 4px rgba(240, 91, 73, 0.62);
+}
+
+.board-actions {
+  border-top: 1px solid var(--line);
+}
+
+.side-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.side-panel > section {
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+.message {
+  border-left: 4px solid var(--gold) !important;
+  color: #e8eee9;
+  line-height: 1.45;
+}
+
+.message.success {
+  border-left-color: var(--green) !important;
+}
+
+.message.error {
+  border-left-color: var(--red) !important;
+}
+
+.strikes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.strikes[hidden] {
+  display: none;
+}
+
+.strikes div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.strikes span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.strikes strong {
+  color: var(--gold-bright);
+  letter-spacing: 0.18em;
+}
+
+.section-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.count-pill {
+  min-width: 2rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(216, 102, 86, 0.15);
+  color: #f29a8d;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.danger-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.danger-item,
+.empty-state {
+  padding: 0.68rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.danger-item strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.danger-item span,
+.empty-state {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.move-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem 0.7rem;
+  max-height: 12rem;
+  margin: 0;
+  padding-left: 1.8rem;
+  overflow: auto;
+}
+
+.move-list li {
+  padding: 0.25rem 0;
+  color: var(--muted);
+}
+
+.move-list li::marker {
+  color: #66746f;
+}
+
+.move-list strong {
+  color: var(--ink);
+}
+
+footer {
+  padding: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+footer strong {
+  color: var(--gold-bright);
+}
+
+@media (max-width: 880px) {
+  .hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .mode-control {
+    max-width: 20rem;
+  }
+
+  .play-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    width: min(100% - 1rem, 1220px);
+    padding-top: 1.1rem;
+  }
+
+  .turn-strip,
+  .board-actions {
+    padding: 0.7rem;
+  }
+
+  .board-actions button {
+    flex: 1;
+  }
+}
