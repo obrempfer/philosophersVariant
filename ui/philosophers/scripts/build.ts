@@ -1,6 +1,6 @@
 import { build } from 'esbuild';
 
-import { buildOptions, prepareHtml } from './buildConfig';
+import { buildOptions, prepareDist } from './buildConfig';
 
-await prepareHtml();
+await prepareDist();
 await build(buildOptions);

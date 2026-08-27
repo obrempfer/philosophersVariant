@@ -1,6 +1,6 @@
 import type { Dests, Key } from '@lichess-org/chessground/types';
 import type { Position } from 'chessops/chess';
-import type { NormalMove } from 'chessops/types';
+import type { NormalMove, Role } from 'chessops/types';
 import { kingCastlesTo, makeSquare, parseSquare, squareRank } from 'chessops/util';
 
 import { type AttemptResult, PhilosophersGame } from './game';
@@ -8,13 +8,28 @@ import { analyzeMoves } from './rules';
 
 export type PlayMode = 'strict' | 'strikes';
 
-const displayDestination = (position: Position, move: NormalMove): Key => {
+const promotionLetter: Partial<Record<Role, string>> = {
+  bishop: 'b',
+  knight: 'n',
+  queen: 'q',
+  rook: 'r',
+};
+
+export const displayDestination = (position: Position, move: NormalMove): Key => {
   if (position.board.king.has(move.from) && position.board[position.turn].has(move.to)) {
     const side = move.to > move.from ? 'h' : 'a';
     return makeSquare(kingCastlesTo(position.turn, side));
   }
   return makeSquare(move.to);
 };
+
+export const moveToUci = (position: Position, move: NormalMove): string =>
+  `${makeSquare(move.from)}${displayDestination(position, move)}${move.promotion ? promotionLetter[move.promotion] : ''}`;
+
+export const moveToBoardKeys = (position: Position, move: NormalMove): [Key, Key] => [
+  makeSquare(move.from),
+  displayDestination(position, move),
+];
 
 export const destinationsForMode = (position: Position, mode: PlayMode): Dests => {
   const destinations = new Map<Key, Set<Key>>();

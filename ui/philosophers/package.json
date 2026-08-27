@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "@lichess-org/chessground": "^10.1.1",
+    "@lichess-org/stockfish-web": "0.4.2",
     "chessops": "^0.15.1"
   },
   "devDependencies": {

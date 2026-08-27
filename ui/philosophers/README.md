@@ -22,6 +22,29 @@ Then open [http://127.0.0.1:4173](http://127.0.0.1:4173). The app has two ways t
 Both modes mark endangered pieces on the board and explain the current duty of care beside it. Promotion currently
 defaults to a queen.
 
+## Computer opponents
+
+The opponent control offers local two-player play and two computer personalities. Both bots obey the moral move
+filter even when the game uses Three Strikes; weaker levels choose weaker legal moves rather than deliberately taking
+strikes.
+
+- **Constrained Stockfish** receives the complete list of morally legal root moves through UCI `searchmoves`, then
+  chooses among them using its ordinary chess search. It cannot select a prohibited move, but moves later in its
+  internal principal variations are still ordinary chess moves. The browser build is Fairy-Stockfish 14+ HCE from
+  `@lichess-org/stockfish-web`.
+- **Philosopher Engine** is the experimental rule-aware opponent. Its minimax search calls the Philosophers' Chess
+  move filter for both players at every explored node, so it can plan around forced rescues and prohibited future
+  sacrifices. It uses a lightweight material, position, and danger evaluation rather than Stockfish's NNUE.
+
+Levels 1–8 control Stockfish skill and thinking time or, for the Philosopher Engine, search depth, node budget, and
+move randomness. They are intentionally presented as levels rather than Elo because ordinary-chess Elo calibration
+does not transfer to this variant. If only one moral move exists, every level makes that move.
+
+The development server sends the cross-origin isolation headers required by threaded Stockfish WebAssembly. Any
+other deployment must also send `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`. The production build copies the Stockfish GPL license beside its engine
+assets together with the upstream source and build notice.
+
 ## Danger
 
 A piece is **endangered** when the opponent can capture it without leaving the capturing piece open to a safe

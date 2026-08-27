@@ -123,22 +123,56 @@ h2 {
   color: var(--muted);
 }
 
-.mode-control {
+.setup-bar {
   display: grid;
-  gap: 0.35rem;
-  min-width: 12rem;
+  grid-template-columns:
+    minmax(11rem, 1fr) minmax(14rem, 1.25fr) minmax(8rem, 0.7fr) minmax(11rem, 1fr)
+    minmax(11rem, 1.1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--panel);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
 }
 
-.mode-control label {
+.setup-control {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.setup-control label,
+.engine-readout span {
   color: var(--muted);
   font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.mode-control select {
+.setup-control select {
+  width: 100%;
   padding: 0.72rem 2.2rem 0.72rem 0.85rem;
   cursor: pointer;
+}
+
+.setup-control select:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.25);
+  opacity: 0.48;
+}
+
+.engine-readout {
+  display: grid;
+  align-content: center;
+  gap: 0.28rem;
+  padding: 0.2rem 0.65rem;
+  border-left: 1px solid var(--line);
+}
+
+.engine-readout strong {
+  color: var(--gold-bright);
+  font-size: 0.9rem;
 }
 
 .play-layout {
@@ -348,8 +382,15 @@ footer strong {
     gap: 1rem;
   }
 
-  .mode-control {
-    max-width: 20rem;
+  .setup-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .engine-readout {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    grid-column: 1 / -1;
+    padding-top: 0.8rem;
   }
 
   .play-layout {
@@ -370,5 +411,13 @@ footer strong {
 
   .board-actions button {
     flex: 1;
+  }
+
+  .setup-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .engine-readout {
+    grid-column: auto;
   }
 }

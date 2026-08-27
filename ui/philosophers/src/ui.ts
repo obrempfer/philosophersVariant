@@ -1,13 +1,17 @@
 import { Chessground } from '@lichess-org/chessground';
 import type { Api } from '@lichess-org/chessground/api';
 import type { Key, SquareClasses } from '@lichess-org/chessground/types';
-import { makeBoardFen } from 'chessops/fen';
+import { makeBoardFen, makeFen } from 'chessops/fen';
+import type { Color } from 'chessops/types';
 
+import { botDifficulty, botName, moralMoves, type BotKind } from './bot';
 import { PhilosophersGame } from './game';
+import { PhilosopherClient } from './philosopherClient';
 import { analyzeMoves, dangerReport, type PieceDanger } from './rules';
+import { StockfishClient, type StockfishStatus } from './stockfish';
 
 import './styles.css';
-import { attemptBoardMove, destinationsForMode, type PlayMode } from './uiModel';
+import { attemptBoardMove, destinationsForMode, moveToBoardKeys, type PlayMode } from './uiModel';
 
 const element = <T extends HTMLElement>(selector: string): T => {
   const found = document.querySelector<T>(selector);
@@ -17,6 +21,10 @@ const element = <T extends HTMLElement>(selector: string): T => {
 
 const boardElement = element<HTMLDivElement>('#board');
 const modeSelect = element<HTMLSelectElement>('#mode');
+const opponentSelect = element<HTMLSelectElement>('#opponent');
+const humanColorSelect = element<HTMLSelectElement>('#human-color');
+const botLevelSelect = element<HTMLSelectElement>('#bot-level');
+const botStatus = element<HTMLElement>('#bot-status');
 const modeTitle = element<HTMLElement>('#mode-title');
 const modeCopy = element<HTMLElement>('#mode-copy');
 const message = element<HTMLElement>('#message');
@@ -32,8 +40,20 @@ const legalCount = element<HTMLElement>('#legal-count');
 
 let game = new PhilosophersGame();
 let mode: PlayMode = 'strict';
+let botKind: BotKind | undefined;
+let humanColor: Color = 'white';
+let botThinking = false;
+let botGeneration = 0;
+let stockfishStatus: StockfishStatus = 'idle';
+let stockfishDetail: string | undefined;
 let lastMove: Key[] | undefined;
 const history: string[] = [];
+const philosopher = new PhilosopherClient();
+const stockfish = new StockfishClient((status, detail) => {
+  stockfishStatus = status;
+  stockfishDetail = detail;
+  renderBotStatus();
+});
 
 const ground: Api = Chessground(boardElement, {
   animation: { enabled: true, duration: 180 },
@@ -61,6 +81,34 @@ const setMessage = (text: string, tone: 'neutral' | 'success' | 'error' = 'neutr
   message.textContent = text;
   message.className = `message ${tone}`;
 };
+
+const isHumanTurn = (): boolean =>
+  !game.outcome && !botThinking && (!botKind || game.position.turn === humanColor);
+
+function renderBotStatus(): void {
+  humanColorSelect.disabled = !botKind;
+  botLevelSelect.disabled = !botKind;
+  if (!botKind) {
+    botStatus.textContent = 'Local two-player';
+    return;
+  }
+  if (botThinking) {
+    botStatus.textContent = `${botName(botKind)} · thinking`;
+    return;
+  }
+  if (botKind === 'philosopher') {
+    botStatus.textContent = 'Philosopher Engine · ready';
+    return;
+  }
+  const labels: Record<StockfishStatus, string> = {
+    error: stockfishDetail ?? 'error',
+    idle: 'loads on first move',
+    loading: 'loading engine',
+    ready: 'ready',
+    thinking: 'thinking',
+  };
+  botStatus.textContent = `Constrained Stockfish · ${labels[stockfishStatus]}`;
+}
 
 const describeExposure = (danger: PieceDanger[]): string =>
   danger
@@ -111,6 +159,7 @@ const render = (): void => {
   const allowedMoves = moves.filter(move => move.legal);
   const destinations = destinationsForMode(game.position, mode);
   const modeIsStrict = mode === 'strict';
+  const humanMayMove = isHumanTurn();
 
   ground.set({
     check: game.position.isCheck() ? game.position.turn : false,
@@ -118,17 +167,20 @@ const render = (): void => {
     highlight: { custom: dangerClasses(danger), lastMove: true },
     lastMove,
     movable: {
-      color: game.outcome ? undefined : game.position.turn,
-      dests: game.outcome ? new Map() : destinations,
+      color: humanMayMove ? game.position.turn : undefined,
+      dests: humanMayMove ? destinations : new Map(),
     },
     turnColor: game.position.turn,
   });
 
-  turnLabel.textContent = game.outcome
-    ? game.outcome.winner
-      ? `${game.outcome.winner} wins`
-      : 'Draw'
-    : `${game.position.turn[0].toUpperCase()}${game.position.turn.slice(1)} to move`;
+  turnLabel.textContent =
+    botThinking && botKind
+      ? `${botName(botKind)} is thinking…`
+      : game.outcome
+        ? game.outcome.winner
+          ? `${game.outcome.winner} wins`
+          : 'Draw'
+        : `${game.position.turn[0].toUpperCase()}${game.position.turn.slice(1)} to move`;
   turnMarker.classList.toggle('black', game.position.turn === 'black');
   legalCount.textContent = `${allowedMoves.length} moral move${allowedMoves.length === 1 ? '' : 's'}`;
 
@@ -139,11 +191,69 @@ const render = (): void => {
   strikesPanel.hidden = modeIsStrict;
   whiteStrikes.textContent = strikeDots(game.strikes.white);
   blackStrikes.textContent = strikeDots(game.strikes.black);
+  renderBotStatus();
   renderDanger(danger);
   renderHistory();
 };
 
+const cancelBotSearch = (): void => {
+  botGeneration++;
+  botThinking = false;
+  stockfish.stop();
+  philosopher.stop();
+};
+
+const maybePlayBot = async (): Promise<void> => {
+  if (!botKind || botThinking || game.outcome || game.position.turn === humanColor) return;
+
+  const generation = ++botGeneration;
+  const activeBot = botKind;
+  const difficulty = botDifficulty(Number(botLevelSelect.value));
+  const position = game.position.clone();
+  botThinking = true;
+  setMessage(`${botName(activeBot)} is considering its duty of care…`);
+  render();
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 180));
+    let uci: string;
+    let searchDetail = `level ${difficulty.level}`;
+    if (activeBot === 'stockfish') {
+      const moves = moralMoves(position).map(candidate => candidate.uci);
+      uci = await stockfish.bestMove({
+        fen: makeFen(position.toSetup()),
+        moves,
+        moveTime: difficulty.stockfishMoveTime,
+        skill: difficulty.stockfishSkill,
+      });
+    } else {
+      const choice = await philosopher.choose(makeFen(position.toSetup()), difficulty.level);
+      uci = choice.uci;
+      searchDetail = `depth ${choice.depth || 1}, ${choice.nodes} nodes`;
+    }
+
+    if (generation !== botGeneration || game.outcome) return;
+    const result = game.attemptText(uci);
+    if (!result.accepted || !result.assessment || !result.san) {
+      throw new Error(`${botName(activeBot)} selected a prohibited move: ${uci}`);
+    }
+
+    lastMove = moveToBoardKeys(position, result.assessment.move);
+    history.push(result.san);
+    botThinking = false;
+    setMessage(`${botName(activeBot)} plays ${result.san} (${searchDetail}).`, 'success');
+    render();
+  } catch (error) {
+    if (generation !== botGeneration) return;
+    botThinking = false;
+    const detail = error instanceof Error ? error.message : String(error);
+    setMessage(`Bot error: ${detail}`, 'error');
+    render();
+  }
+};
+
 function handleMove(from: Key, to: Key): void {
+  if (!isHumanTurn()) return;
   const result = attemptBoardMove(game, from, to);
   if (result.accepted) {
     lastMove = [from, to];
@@ -160,6 +270,7 @@ function handleMove(from: Key, to: Key): void {
     );
   }
   render();
+  if (result.accepted) void maybePlayBot();
 }
 
 modeSelect.addEventListener('change', () => {
@@ -172,14 +283,46 @@ modeSelect.addEventListener('change', () => {
   render();
 });
 
+const configureOpponent = (): void => {
+  cancelBotSearch();
+  botKind = opponentSelect.value === 'human' ? undefined : (opponentSelect.value as BotKind);
+  humanColor = humanColorSelect.value as Color;
+  ground.set({ orientation: botKind ? humanColor : 'white' });
+  setMessage(
+    botKind
+      ? `${botName(botKind)} joins as ${humanColor === 'white' ? 'Black' : 'White'}.`
+      : 'Local two-player game enabled.',
+  );
+  render();
+  void maybePlayBot();
+};
+
+opponentSelect.addEventListener('change', configureOpponent);
+humanColorSelect.addEventListener('change', configureOpponent);
+botLevelSelect.addEventListener('change', () => {
+  cancelBotSearch();
+  const difficulty = botDifficulty(Number(botLevelSelect.value));
+  setMessage(`${botName(botKind ?? 'stockfish')} set to ${difficulty.label}.`);
+  render();
+  void maybePlayBot();
+});
+
 element<HTMLButtonElement>('#reset').addEventListener('click', () => {
+  cancelBotSearch();
   game = new PhilosophersGame();
   lastMove = undefined;
   history.length = 0;
+  ground.set({ orientation: botKind ? humanColor : 'white' });
   setMessage('A new game begins. White has command.', 'neutral');
   render();
+  void maybePlayBot();
 });
 
 element<HTMLButtonElement>('#flip').addEventListener('click', () => ground.toggleOrientation());
+
+window.addEventListener('beforeunload', () => {
+  stockfish.destroy();
+  philosopher.stop();
+});
 
 render();

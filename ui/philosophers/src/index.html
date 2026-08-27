@@ -8,6 +8,7 @@
       content="A playable prototype of Philosophers' Chess, where every move must respect the lives under your command."
     />
     <title>Philosophers' Chess</title>
+    <link rel="icon" href="data:," />
     <link rel="stylesheet" href="./app.css" />
     <script type="module" src="./app.js"></script>
   </head>
@@ -19,14 +20,49 @@
           <h1>Philosophers’ Chess</h1>
           <p class="hero-copy">No piece should be ordered into avoidable danger.</p>
         </div>
-        <div class="mode-control" aria-label="Play mode">
+      </header>
+
+      <section class="setup-bar" aria-label="Game setup">
+        <div class="setup-control">
           <label for="mode">Rules mode</label>
           <select id="mode">
             <option value="strict">Strict movement</option>
             <option value="strikes">Three strikes</option>
           </select>
         </div>
-      </header>
+        <div class="setup-control">
+          <label for="opponent">Opponent</label>
+          <select id="opponent">
+            <option value="human">Local human</option>
+            <option value="stockfish">Constrained Stockfish</option>
+            <option value="philosopher">Philosopher Engine</option>
+          </select>
+        </div>
+        <div class="setup-control">
+          <label for="human-color">Your side</label>
+          <select id="human-color" disabled>
+            <option value="white">White</option>
+            <option value="black">Black</option>
+          </select>
+        </div>
+        <div class="setup-control">
+          <label for="bot-level">Bot level</label>
+          <select id="bot-level" disabled>
+            <option value="1">1 · Novice</option>
+            <option value="2">2 · Learner</option>
+            <option value="3">3 · Thoughtful</option>
+            <option value="4" selected>4 · Capable</option>
+            <option value="5">5 · Strong</option>
+            <option value="6">6 · Expert</option>
+            <option value="7">7 · Master</option>
+            <option value="8">8 · Uncompromising</option>
+          </select>
+        </div>
+        <div class="engine-readout">
+          <span>Engine status</span>
+          <strong id="bot-status" role="status">Local two-player</strong>
+        </div>
+      </section>
 
       <section class="play-layout">
         <div class="board-column">

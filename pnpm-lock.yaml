@@ -474,6 +474,9 @@ importers:
       '@lichess-org/chessground':
         specifier: ^10.1.1
         version: 10.1.1
+      '@lichess-org/stockfish-web':
+        specifier: 0.4.2
+        version: 0.4.2
       chessops:
         specifier: ^0.15.1
         version: 0.15.1

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { PhilosophersGame } from '../src/game';
-import { attemptBoardMove, destinationsForMode } from '../src/uiModel';
+import { attemptBoardMove, destinationsForMode, moveToUci } from '../src/uiModel';
 
 const position = (fen: string): Chess => Chess.fromSetup(parseFen(fen).unwrap()).unwrap();
 
@@ -64,6 +64,11 @@ test('castling uses the king destination expected by the board UI', () => {
 
   assert.equal(destinations.get('e1')?.includes('g1') ?? false, true);
   assert.equal(destinations.get('e1')?.includes('h1') ?? false, false);
+  const castle = Array.from(game.position.allDests())
+    .flatMap(([from, destinations]) => Array.from(destinations, to => ({ from, to })))
+    .find(move => move.from === 4 && move.to === 7);
+  assert.ok(castle);
+  assert.equal(moveToUci(game.position, castle), 'e1g1');
   assert.equal(attemptBoardMove(game, 'e1', 'g1').accepted, true);
   assert.equal(game.position.board.kingOf('white'), 6);
 });
