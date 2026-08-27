@@ -1,0 +1,20 @@
+{
+  "name": "philosophers",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "chessops": "^0.15.1"
+  },
+  "scripts": {
+    "play": "tsx src/cli.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": {
+        "source": "./src/index.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  }
+}

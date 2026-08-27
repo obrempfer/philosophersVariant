@@ -469,6 +469,12 @@ importers:
         specifier: workspace:*
         version: link:../lib
 
+  ui/philosophers:
+    dependencies:
+      chessops:
+        specifier: ^0.15.1
+        version: 0.15.1
+
   ui/puzzle:
     dependencies:
       '@badrap/result':
