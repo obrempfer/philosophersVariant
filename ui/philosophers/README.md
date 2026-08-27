@@ -24,14 +24,14 @@ defaults to a queen.
 
 ## Danger
 
-A piece is **endangered** when more enemy pieces attack its square than friendly pieces support it:
+A piece is **endangered** when the opponent can capture it without leaving the capturing piece open to a safe
+recapture. The same test is applied recursively to each possible recapture until the exchange ends. Because every
+step removes a piece, the test always terminates.
 
-```text
-enemy attackers > friendly supporters
-```
-
-The piece occupying the square is not one of its own supporters. Version 1 uses the ordinary chess attack map,
-including attacks by pinned pieces. Every piece has equal moral weight; standard material values are not used.
+The attack map is recalculated after every capture, so discovered and x-ray protection count. For example, after a
+pawn moves from `b2` to capture on `a3`, the bishop on `c1` may become a newly revealed defender. Version 1 uses the
+ordinary geometric attack map from chessops, including attacks by pinned pieces. Every piece has equal moral weight;
+standard material values are not used.
 
 ## Least avoidable harm
 

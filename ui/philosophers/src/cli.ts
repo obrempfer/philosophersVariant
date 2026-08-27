@@ -6,7 +6,7 @@ import { PhilosophersGame } from './game';
 import { analyzeMoves, dangerReport, type PieceDanger } from './rules';
 
 const explainDanger = (danger: PieceDanger): string =>
-  `${danger.squareName}: ${danger.attackerCount} attacker(s) vs ${danger.supporterCount} supporter(s)`;
+  `${danger.squareName}: safe capture sequence ${danger.captureSequence.map(from => `${from}x${danger.squareName}`).join(', ')}`;
 
 const printPosition = (game: PhilosophersGame): void => {
   console.log(`\n${renderBoard(game.position.board)}`);

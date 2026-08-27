@@ -62,6 +62,14 @@ const setMessage = (text: string, tone: 'neutral' | 'success' | 'error' = 'neutr
   message.className = `message ${tone}`;
 };
 
+const describeExposure = (danger: PieceDanger[]): string =>
+  danger
+    .map(item => {
+      const sequence = item.captureSequence.map(from => `${from}×${item.squareName}`).join(' → ');
+      return `${item.piece.role} on ${item.squareName} would face ${sequence}`;
+    })
+    .join('; ');
+
 const renderDanger = (danger: PieceDanger[]): void => {
   dangerCount.textContent = String(danger.length);
   dangerList.replaceChildren();
@@ -79,7 +87,8 @@ const renderDanger = (danger: PieceDanger[]): void => {
     const title = document.createElement('strong');
     title.textContent = `${item.piece.role} on ${item.squareName}`;
     const detail = document.createElement('span');
-    detail.textContent = `${item.attackerCount} attacker${item.attackerCount === 1 ? '' : 's'} against ${item.supporterCount} supporter${item.supporterCount === 1 ? '' : 's'}`;
+    const exchange = item.captureSequence.map(from => `${from}×${item.squareName}`).join(', ');
+    detail.textContent = `Safe capture: ${exchange}. ${item.attackerCount} immediate attacker${item.attackerCount === 1 ? '' : 's'}, ${item.supporterCount} immediate defender${item.supporterCount === 1 ? '' : 's'}.`;
     row.append(title, detail);
     dangerList.append(row);
   }
@@ -143,8 +152,10 @@ function handleMove(from: Key, to: Key): void {
   } else if (result.outcome?.reason === 'strikeout') {
     setMessage(`${result.mover} receives a third strike and loses command.`, 'error');
   } else {
+    const exposure = result.assessment?.afterDanger;
+    const detail = exposure?.length ? ` ${describeExposure(exposure)}.` : '';
     setMessage(
-      `Order refused: ${result.reason.replaceAll('-', ' ')}. Strike ${result.strikes}/${game.strikeLimit}.`,
+      `Order refused: ${result.reason.replaceAll('-', ' ')}.${detail} Strike ${result.strikes}/${game.strikeLimit}.`,
       'error',
     );
   }

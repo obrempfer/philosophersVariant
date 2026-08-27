@@ -9,6 +9,7 @@ import {
   type Role,
   type Square,
   type SquareName,
+  ROLES,
 } from 'chessops/types';
 import { makeSquare, moveEquals, opposite, squareRank } from 'chessops/util';
 
@@ -20,6 +21,7 @@ export interface PieceDanger {
   attackers: SquareName[];
   supporterCount: number;
   attackerCount: number;
+  captureSequence: SquareName[];
 }
 
 export type MoralPolicy = 'complete-safety' | 'non-worsening' | 'least-harm';
@@ -52,21 +54,79 @@ const promotionRoles: Role[] = ['queen', 'rook', 'bishop', 'knight'];
 
 const squareNames = (squares: Iterable<Square>): SquareName[] => Array.from(squares, makeSquare);
 
+interface CaptureSearch {
+  safe: boolean;
+  line: Square[];
+}
+
+const exchangeKey = (position: Position, square: Square, attacker: Color): string => {
+  const board = position.board;
+  const sets = [board.white, board.black, ...ROLES.map(role => board[role])];
+  return `${square}:${attacker}:${sets.map(set => `${set.lo},${set.hi}`).join(':')}`;
+};
+
 /**
- * Returns every piece belonging to `color` that is presently out-controlled.
+ * Looks for a capture whose new occupant cannot itself be captured safely.
  *
- * Version 1 deliberately uses the geometric attack map from chessops. The
- * occupying piece never appears among the attackers of its own square, so it
- * is naturally excluded from its supporter count.
+ * Each recursive step removes one piece, so the search always terminates. The
+ * board is updated between steps, which reveals x-ray attackers opened by an
+ * exchange (for example b2xa3 uncovering a bishop on c1).
+ */
+const safeCapture = (
+  position: Position,
+  square: Square,
+  attacker: Color,
+  memo: Map<string, CaptureSearch>,
+): CaptureSearch => {
+  const key = exchangeKey(position, square, attacker);
+  const cached = memo.get(key);
+  if (cached) return cached;
+
+  const occupant = position.board.get(square);
+  if (!occupant || occupant.color === attacker) return { safe: false, line: [] };
+
+  let illustrativeRefutation: Square[] = [];
+  const attackers = position.kingAttackers(square, attacker, position.board.occupied);
+  for (const from of attackers) {
+    const after = position.clone();
+    const capturingPiece = after.board.take(from);
+    if (!capturingPiece) continue;
+    after.board.set(square, capturingPiece);
+
+    const response = safeCapture(after, square, occupant.color, memo);
+    const line = [from, ...response.line];
+    if (!response.safe) {
+      const result = { safe: true, line };
+      memo.set(key, result);
+      return result;
+    }
+    if (line.length > illustrativeRefutation.length) illustrativeRefutation = line;
+  }
+
+  const result = { safe: false, line: illustrativeRefutation };
+  memo.set(key, result);
+  return result;
+};
+
+/**
+ * Returns every piece belonging to `color` that the opponent can capture
+ * without exposing the capturing piece to a safe recapture.
+ *
+ * The exchange search deliberately uses the geometric attack map from
+ * chessops, including attacks by pinned pieces. Immediate attackers and
+ * supporters are retained in the report as useful context, but the recursive
+ * safe-capture result determines danger.
  */
 export const dangerReport = (position: Position, color: Color): PieceDanger[] => {
   const danger: PieceDanger[] = [];
   const occupied = position.board.occupied;
+  const memo = new Map<string, CaptureSearch>();
 
   for (const square of position.board[color]) {
     const supporters = position.kingAttackers(square, color, occupied);
     const attackers = position.kingAttackers(square, opposite(color), occupied);
-    if (attackers.size() > supporters.size()) {
+    const capture = safeCapture(position, square, opposite(color), memo);
+    if (capture.safe) {
       danger.push({
         square,
         squareName: makeSquare(square),
@@ -75,6 +135,7 @@ export const dangerReport = (position: Position, color: Color): PieceDanger[] =>
         attackers: squareNames(attackers),
         supporterCount: supporters.size(),
         attackerCount: attackers.size(),
+        captureSequence: squareNames(capture.line),
       });
     }
   }

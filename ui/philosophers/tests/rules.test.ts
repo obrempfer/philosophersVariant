@@ -15,7 +15,7 @@ const assessment = (fen: string, uci: string): MoveAssessment => {
   return assessMove(pos, move);
 };
 
-test('danger is based on enemy attackers exceeding friendly supporters', () => {
+test('an attacked piece with no safe recapture is endangered', () => {
   const pos = position('4k3/8/8/3r4/3N4/8/8/4K3 w - - 0 1');
   const danger = dangerReport(pos, 'white');
 
@@ -62,6 +62,19 @@ test('a third attacker makes the same capture safe', () => {
 
   assert.equal(result.legal, true);
   assert.equal(result.afterDanger.length, 0);
+});
+
+test('discovered protection during an exchange makes Qxa3 a sacrifice', () => {
+  const fen = 'r3k2r/pbppbpp1/1p6/2qPp2p/P2nP1n1/R1NB1N1P/1PPQ1PP1/2B1KR2 b kq - 1 12';
+  const result = assessment(fen, 'c5a3');
+
+  assert.equal(result.legal, false);
+  assert.equal(result.reason, 'complete-rescue-required');
+  assert.deepEqual(
+    result.afterDanger.map(danger => danger.squareName),
+    ['a3'],
+  );
+  assert.deepEqual(result.afterDanger[0].captureSequence, ['b2', 'e7', 'c1']);
 });
 
 test('an unsaveable piece creates no obligation but avoidable additional danger remains illegal', () => {
