@@ -32,6 +32,14 @@ test('the constrained engine list excludes Qxa3 in the discovered-bishop positio
   assert.ok(moves.length > 0);
 });
 
+test('both engines receive moral intermezzi in their legal move list', () => {
+  const pos = position('r3B1kr/npp1n1bp/p3bqp1/3pp3/P1NPPpP1/2PQBP1P/1P2NR2/R5K1 w - - 3 19');
+  const moves = new Set(moralMoves(pos).map(candidate => candidate.uci));
+
+  assert.equal(moves.has('d3d2'), true);
+  assert.equal(moves.has('a1b1'), false);
+});
+
 test('the Philosopher Engine returns a moral move after searching both sides under the variant rules', () => {
   const pos = position('r3k2r/pbppbpp1/1p6/2qPp2p/P2nP1n1/R1NB1N1P/1PPQ1PP1/2B1KR2 b kq - 1 12');
   const choice = choosePhilosopherMove(pos, botDifficulty(6), { random: () => 0 });

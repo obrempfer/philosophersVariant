@@ -108,9 +108,63 @@ test('an otherwise sacrificial move is legal when it rescues a piece without inc
 
 test('danger threshold follows least avoidable harm priorities', () => {
   assert.deepEqual(dangerThreshold(1, [0, 1, 2]), { ceiling: 0, policy: 'complete-safety' });
-  assert.deepEqual(dangerThreshold(2, [1, 2, 3]), { ceiling: 2, policy: 'non-worsening' });
+  assert.deepEqual(dangerThreshold(2, [1, 2, 3]), { ceiling: 1, policy: 'non-worsening' });
   assert.deepEqual(dangerThreshold(1, [1, 2]), { ceiling: 1, policy: 'non-worsening' });
   assert.deepEqual(dangerThreshold(0, [1, 2, 2]), { ceiling: 1, policy: 'least-harm' });
+});
+
+test('a non-capturing counter-threat provides actionable safety during a forced rescue', () => {
+  const fen = 'n7/7k/8/3r4/3N4/8/8/KR6 w - - 0 1';
+  const result = assessment(fen, 'b1b8');
+
+  assert.equal(result.legal, true);
+  assert.equal(result.reason, 'legal-actionable-safety');
+  assert.equal(result.forcingRescue, true);
+  assert.deepEqual(
+    result.afterDanger.map(danger => danger.squareName),
+    ['d4'],
+  );
+  assert.deepEqual(result.actionableDanger, []);
+});
+
+test('a counter-threat fails when a best rescue reply can capture the exposed piece', () => {
+  const fen = '7k/8/8/3r4/3N4/8/2B5/K7 w - - 0 1';
+  const result = assessment(fen, 'c2b3');
+
+  assert.equal(result.legal, false);
+  assert.equal(result.forcingRescue, true);
+  assert.deepEqual(result.actionableDanger, ['d4']);
+});
+
+test('a capture cannot defer its own rescue duty through actionable safety', () => {
+  const fen = 'nb6/7k/8/3r4/3N4/8/8/KR6 w - - 0 1';
+  const result = assessment(fen, 'b1b8');
+
+  assert.equal(result.san, 'Rxb8');
+  assert.equal(result.legal, false);
+  assert.equal(result.reason, 'complete-rescue-required');
+});
+
+test('the two-threat game position permits Qd2 as a moral intermezzo', () => {
+  const fen = 'r3B1kr/npp1n1bp/p3bqp1/3pp3/P1NPPpP1/2PQBP1P/1P2NR2/R5K1 w - - 3 19';
+  const directRescue = assessment(fen, 'b2b3');
+  const ignoresBoth = assessment(fen, 'a1b1');
+  const intermezzo = assessment(fen, 'd3d2');
+
+  assert.equal(directRescue.legal, true);
+  assert.deepEqual(
+    directRescue.afterDanger.map(danger => danger.squareName),
+    ['e8'],
+  );
+  assert.equal(ignoresBoth.legal, false);
+  assert.equal(intermezzo.legal, true);
+  assert.equal(intermezzo.reason, 'legal-actionable-safety');
+  assert.equal(intermezzo.forcingRescue, true);
+  assert.deepEqual(
+    intermezzo.afterDanger.map(danger => danger.squareName),
+    ['c4', 'e8'],
+  );
+  assert.deepEqual(intermezzo.actionableDanger, []);
 });
 
 test('the initial position offers ordinary safe opening moves', () => {

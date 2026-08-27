@@ -45,7 +45,7 @@ other deployment must also send `Cross-Origin-Opener-Policy: same-origin` and
 `Cross-Origin-Embedder-Policy: require-corp`. The production build copies the Stockfish GPL license beside its engine
 assets together with the upstream source and build notice.
 
-## Danger
+## Geometric danger
 
 A piece is **endangered** when the opponent can capture it without leaving the capturing piece open to a safe
 recapture. The same test is applied recursively to each possible recapture until the exchange ends. Because every
@@ -56,16 +56,38 @@ pawn moves from `b2` to capture on `a3`, the bishop on `c1` may become a newly r
 ordinary geometric attack map from chessops, including attacks by pinned pieces. Every piece has equal moral weight;
 standard material values are not used.
 
-## Least avoidable harm
+This geometric report describes physical exposure. Move legality adds **actionable safety**: an exposed piece is not
+immediately actionable when the opponent's own duty of care leaves no permitted capturing reply.
+
+## Best attainable rescue
 
 For the side to move, let `currentDanger` be the number of endangered friendly pieces. Simulate every move that is
 legal under ordinary chess and calculate `resultingDanger` for the mover after each move.
 
-1. If any move produces `resultingDanger = 0`, only moves producing zero danger are legal. Complete rescue is
-   mandatory when it is possible.
-2. If complete rescue is impossible and at least one move does not increase danger, every non-worsening move is
-   legal. Existing unsaveable pieces create no impossible obligation.
-3. If every move increases danger, only moves with the smallest resulting danger are legal.
+The smallest `resultingDanger` is the **best immediate rescue**. Every move achieving that minimum is legal. This
+means that if two pieces are exposed and both can be saved, both must be saved; if only one can be saved, at least one
+must be saved; and if neither can be saved, the position creates no impossible rescue obligation. When every move
+adds danger, only moves causing the least possible harm are legal.
+
+## Actionable safety and moral intermezzi
+
+A non-capturing move that does not achieve the best immediate rescue may still be legal as a **moral intermezzo**.
+After that candidate move, calculate the opponent's best immediate rescue replies. Count only friendly pieces that
+the opponent can capture with one of those permitted replies. The intermezzo is legal when this actionable count is
+no greater than the danger left by the best direct rescue.
+
+This gives counter-threats their natural forcing effect. If a move endangers an opposing piece and every permitted
+rescue leaves the mover's exposed pieces alive, those pieces are procedurally safe for that turn. If the opponent can
+rescue by capturing the attacker or another exposed piece, the counter-threat does not qualify. An unsaveable threat
+does not manufacture a rescue obligation.
+
+Only non-captures may use the intermezzo exception. Captures must satisfy the best-immediate-rescue rule directly.
+This finite one-ply base ensures that every permitted capturing reply is considered without recursively asking
+whether legality depends on itself. Non-capturing counter-threats may still form longer forcing sequences.
+
+In the position after `18...Be6` from the motivating game, White's bishop on `e8` and knight on `c4` are geometrically
+exposed. Direct rescue can reduce that count to one. `19.Qd2` is also legal: it makes Black's pawn on `f4` endangered,
+Black's best direct rescue is `...g5`, and no best direct reply can capture either exposed white piece.
 
 This makes a normally sacrificial move legal when it rescues another piece without increasing total danger. It also
 prevents moving a defender away when doing so creates avoidable danger.
@@ -73,7 +95,7 @@ prevents moving a defender away when doing so creates avoidable danger.
 ## Game rules in v1
 
 - Ordinary chess determines movement, check, checkmate, stalemate, castling, en passant, and promotion.
-- The least-avoidable-harm filter is applied on top of ordinary legal moves.
+- Best attainable rescue and actionable safety are applied on top of ordinary legal moves.
 - In three-strike mode, an attempted move rejected by either ruleset leaves the board unchanged and gives the player
   one strike. A player's third strike loses the game.
 - In strict mode, the UI prevents moral violations from being selected.
@@ -100,5 +122,5 @@ three layers:
 2. Add matching client-side analysis to `chessops` 0.15.x.
 3. Register the variant, persistence key, setup forms, translations, game UI, and strikeout outcome in Lila.
 
-Stockfish evaluates ordinary chess and does not understand the moral move filter, so computer opponents are outside
-the scope of v1.
+The prototype computer opponents remain browser-side. A production Lichess integration would also need deployment
+and matchmaking decisions for constrained Stockfish and the rule-aware Philosopher Engine.

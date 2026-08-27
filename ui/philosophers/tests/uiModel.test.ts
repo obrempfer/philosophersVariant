@@ -58,6 +58,16 @@ test('strict mode blocks Qxa3 when bxa3 reveals the c1 bishop', () => {
   assert.equal(game.position.board.get(34)?.role, 'queen');
 });
 
+test('strict mode offers a forcing counter-threat but hides a non-rescue', () => {
+  const pos = position('r3B1kr/npp1n1bp/p3bqp1/3pp3/P1NPPpP1/2PQBP1P/1P2NR2/R5K1 w - - 3 19');
+  const strict = destinationsForMode(pos, 'strict');
+  const strikes = destinationsForMode(pos, 'strikes');
+
+  assert.equal(strict.get('d3')?.includes('d2') ?? false, true);
+  assert.equal(strict.get('a1')?.includes('b1') ?? false, false);
+  assert.equal(strikes.get('a1')?.includes('b1') ?? false, true);
+});
+
 test('castling uses the king destination expected by the board UI', () => {
   const game = new PhilosophersGame(position('r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1'));
   const destinations = destinationsForMode(game.position, 'strikes');

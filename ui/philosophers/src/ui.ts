@@ -124,7 +124,7 @@ const renderDanger = (danger: PieceDanger[]): void => {
   if (danger.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
-    empty.textContent = 'Every piece is presently protected.';
+    empty.textContent = 'No piece is geometrically exposed.';
     dangerList.append(empty);
     return;
   }
@@ -258,7 +258,12 @@ function handleMove(from: Key, to: Key): void {
   if (result.accepted) {
     lastMove = [from, to];
     if (result.san) history.push(result.san);
-    setMessage(`Order accepted: ${result.san}.`, 'success');
+    setMessage(
+      result.reason === 'legal-actionable-safety'
+        ? `Moral intermezzo accepted: ${result.san}. The opponent has no permitted capture before answering the new duty.`
+        : `Order accepted: ${result.san}.`,
+      'success',
+    );
   } else if (result.outcome?.reason === 'strikeout') {
     setMessage(`${result.mover} receives a third strike and loses command.`, 'error');
   } else {

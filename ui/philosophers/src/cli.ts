@@ -36,7 +36,7 @@ while (!game.outcome) {
   if (text === 'quit' || text === 'exit') break;
   if (text === 'help') {
     console.log(
-      'A move is legal if it produces complete safety when possible, otherwise it must avoid additional danger.',
+      'Choose the best attainable immediate safety. A non-capturing counter-threat is also legal when the opponent has no permitted capturing reply.',
     );
     continue;
   }
@@ -49,7 +49,12 @@ while (!game.outcome) {
   }
 
   const result = game.attemptText(text);
-  if (result.accepted) console.log(`Accepted: ${result.san}`);
+  if (result.accepted)
+    console.log(
+      result.reason === 'legal-actionable-safety'
+        ? `Accepted as a moral intermezzo: ${result.san}`
+        : `Accepted: ${result.san}`,
+    );
   else {
     console.log(
       `Rejected (${result.reason}). Strike ${result.strikes}/${game.strikeLimit} for ${result.mover}.`,
