@@ -167,6 +167,35 @@ test('the two-threat game position permits Qd2 as a moral intermezzo', () => {
   assert.deepEqual(intermezzo.actionableDanger, []);
 });
 
+test('actionable safety rejects b5 when best replies can capture the pawn or bishop', () => {
+  const fen = '1r4kr/npp1nbb1/p4qpp/N2pp3/PPBPPpP1/2PQBP1P/4NR2/1R4K1 w - - 0 24';
+  const rookMove = assessment(fen, 'b1a1');
+  const falseIntermezzo = assessment(fen, 'b4b5');
+
+  assert.equal(rookMove.legal, true);
+  assert.deepEqual(rookMove.actionableDanger, []);
+  assert.equal(falseIntermezzo.legal, false);
+  assert.equal(falseIntermezzo.reason, 'actionable-safety-required');
+  assert.deepEqual(falseIntermezzo.afterDanger, []);
+  assert.deepEqual(new Set(falseIntermezzo.actionableDanger), new Set(['b5', 'c4']));
+});
+
+test('dxc4 remains a legal danger substitution if the b5 position is reached', () => {
+  const fen = '1r4kr/npp1nbb1/p4qpp/NP1pp3/P1BPPpP1/2PQBP1P/4NR2/1R4K1 b - - 0 24';
+  const result = assessment(fen, 'd5c4');
+
+  assert.equal(result.legal, true);
+  assert.deepEqual(
+    result.beforeDanger.map(danger => danger.squareName),
+    ['a6'],
+  );
+  assert.deepEqual(
+    result.afterDanger.map(danger => danger.squareName),
+    ['c4'],
+  );
+  assert.deepEqual(result.actionableDanger, ['c4']);
+});
+
 test('the initial position offers ordinary safe opening moves', () => {
   const moves = analyzeMoves(Chess.default()).filter(move => move.legal);
   const uciMoves = new Set(moves.map(move => makeUci(move.move)));

@@ -268,7 +268,13 @@ function handleMove(from: Key, to: Key): void {
     setMessage(`${result.mover} receives a third strike and loses command.`, 'error');
   } else {
     const exposure = result.assessment?.afterDanger;
-    const detail = exposure?.length ? ` ${describeExposure(exposure)}.` : '';
+    const actionable = result.assessment?.actionableDanger;
+    const detail =
+      result.reason === 'actionable-safety-required' && actionable?.length
+        ? ` Permitted replies can capture ${actionable.join(' and ')}.`
+        : exposure?.length
+          ? ` ${describeExposure(exposure)}.`
+          : '';
     setMessage(
       `Order refused: ${result.reason.replaceAll('-', ' ')}.${detail} Strike ${result.strikes}/${game.strikeLimit}.`,
       'error',

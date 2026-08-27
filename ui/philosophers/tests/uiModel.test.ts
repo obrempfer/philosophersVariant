@@ -68,6 +68,22 @@ test('strict mode offers a forcing counter-threat but hides a non-rescue', () =>
   assert.equal(strikes.get('a1')?.includes('b1') ?? false, true);
 });
 
+test('strict mode hides b5 when it authorizes actionable captures', () => {
+  const game = new PhilosophersGame(
+    position('1r4kr/npp1nbb1/p4qpp/N2pp3/PPBPPpP1/2PQBP1P/4NR2/1R4K1 w - - 0 24'),
+  );
+  const strict = destinationsForMode(game.position, 'strict');
+  const strikes = destinationsForMode(game.position, 'strikes');
+
+  assert.equal(strict.get('b4')?.includes('b5') ?? false, false);
+  assert.equal(strikes.get('b4')?.includes('b5') ?? false, true);
+
+  const result = attemptBoardMove(game, 'b4', 'b5');
+  assert.equal(result.accepted, false);
+  assert.equal(result.reason, 'actionable-safety-required');
+  assert.deepEqual(new Set(result.assessment?.actionableDanger), new Set(['b5', 'c4']));
+});
+
 test('castling uses the king destination expected by the board UI', () => {
   const game = new PhilosophersGame(position('r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1'));
   const destinations = destinationsForMode(game.position, 'strikes');

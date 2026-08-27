@@ -64,17 +64,22 @@ immediately actionable when the opponent's own duty of care leaves no permitted 
 For the side to move, let `currentDanger` be the number of endangered friendly pieces. Simulate every move that is
 legal under ordinary chess and calculate `resultingDanger` for the mover after each move.
 
-The smallest `resultingDanger` is the **best immediate rescue**. Every move achieving that minimum is legal. This
-means that if two pieces are exposed and both can be saved, both must be saved; if only one can be saved, at least one
-must be saved; and if neither can be saved, the position creates no impossible rescue obligation. When every move
-adds danger, only moves causing the least possible harm are legal.
+The smallest `resultingDanger` is the **best immediate rescue** and establishes the direct danger ceiling. This means
+that if two pieces are exposed and both can be saved, both must be saved; if only one can be saved, at least one must
+be saved; and if neither can be saved, the position creates no impossible rescue obligation. When every move adds
+danger, only moves causing the least possible harm can qualify. Every candidate must still pass the actionable-safety
+test below.
 
 ## Actionable safety and moral intermezzi
 
-A non-capturing move that does not achieve the best immediate rescue may still be legal as a **moral intermezzo**.
-After that candidate move, calculate the opponent's best immediate rescue replies. Count only friendly pieces that
-the opponent can capture with one of those permitted replies. The intermezzo is legal when this actionable count is
-no greater than the danger left by the best direct rescue.
+For every candidate move that leaves the opponent with geometric danger, calculate the opponent's best immediate
+rescue replies. Count the friendly pieces that the opponent can capture with one of those permitted replies. A move
+is legal only when this actionable count is no greater than the direct danger ceiling. This check also applies to a
+move that appears completely safe geometrically: creating an opponent rescue duty can authorize a capture that would
+otherwise be sacrificial.
+
+A non-capturing move that does not achieve the best geometric rescue may still qualify as a **moral intermezzo** when
+the opponent can reduce their own danger and the move satisfies that same actionable ceiling.
 
 This gives counter-threats their natural forcing effect. If a move endangers an opposing piece and every permitted
 rescue leaves the mover's exposed pieces alive, those pieces are procedurally safe for that turn. If the opponent can
@@ -88,6 +93,17 @@ whether legality depends on itself. Non-capturing counter-threats may still form
 In the position after `18...Be6` from the motivating game, White's bishop on `e8` and knight on `c4` are geometrically
 exposed. Direct rescue can reduce that count to one. `19.Qd2` is also legal: it makes Black's pawn on `f4` endangered,
 Black's best direct rescue is `...g5`, and no best direct reply can capture either exposed white piece.
+
+The later position after `23...h6` demonstrates the converse. White's `24.b5` appears geometrically safe but
+endangers Black's pawn on `a6`. Black's best permitted replies then include `...axb5`, capturing the advanced pawn,
+and `...dxc4`, removing the bishop that makes the exchange on `a6` unsafe. The move therefore leaves two actionable
+white pieces while the direct danger ceiling is zero, so `24.b5` is illegal. The earlier `23.Rb1` remains legal and
+does not alter the bishop's protection.
+
+If the position after `24.b5` is loaded directly, `...dxc4` remains a legal danger substitution: Black begins with
+the `a6` pawn endangered and ends with the pawn on `c4` endangered. The fix prevents White from authorizing that
+capture when safer choices exist; it does not revoke the established rule that an unavoidable danger may be moved
+from one piece to another.
 
 This makes a normally sacrificial move legal when it rescues another piece without increasing total danger. It also
 prevents moving a defender away when doing so creates avoidable danger.

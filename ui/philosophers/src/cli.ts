@@ -62,6 +62,9 @@ while (!game.outcome) {
     const resultingDanger = result.assessment?.afterDanger;
     if (resultingDanger?.length)
       console.log(`That move would leave: ${resultingDanger.map(explainDanger).join('; ')}`);
+    const actionableDanger = result.assessment?.actionableDanger;
+    if (result.reason === 'actionable-safety-required' && actionableDanger?.length)
+      console.log(`Permitted replies could capture: ${actionableDanger.join(', ')}`);
   }
 }
 

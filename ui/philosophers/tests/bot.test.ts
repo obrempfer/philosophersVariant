@@ -40,6 +40,14 @@ test('both engines receive moral intermezzi in their legal move list', () => {
   assert.equal(moves.has('a1b1'), false);
 });
 
+test('both engines exclude a geometrically safe move with permitted capture replies', () => {
+  const pos = position('1r4kr/npp1nbb1/p4qpp/N2pp3/PPBPPpP1/2PQBP1P/4NR2/1R4K1 w - - 0 24');
+  const moves = new Set(moralMoves(pos).map(candidate => candidate.uci));
+
+  assert.equal(moves.has('b4b5'), false);
+  assert.equal(moves.has('b1a1'), true);
+});
+
 test('the Philosopher Engine returns a moral move after searching both sides under the variant rules', () => {
   const pos = position('r3k2r/pbppbpp1/1p6/2qPp2p/P2nP1n1/R1NB1N1P/1PPQ1PP1/2B1KR2 b kq - 1 12');
   const choice = choosePhilosopherMove(pos, botDifficulty(6), { random: () => 0 });

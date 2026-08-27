@@ -32,6 +32,7 @@ export type MoveReason =
   | 'legal-least-harm'
   | 'legal-actionable-safety'
   | 'standard-illegal'
+  | 'actionable-safety-required'
   | 'complete-rescue-required'
   | 'avoidable-additional-danger'
   | 'not-least-harm';
@@ -212,13 +213,17 @@ const moveCaptures = (before: Position, after: Position, victim: Color): boolean
  * reply. These replies deliberately use geometric danger rather than calling
  * `analyzeMoves`, which gives the actionable-safety rule a finite one-ply base.
  *
- * Actionable-safety exceptions are restricted to non-captures below. Therefore
- * every morally legal capturing reply is present in this immediate reply set,
- * while non-capturing counter-threats can still form longer forcing sequences.
+ * Moral-intermezzo exceptions are restricted to non-captures below. Therefore
+ * every permitted capturing reply must first be a best geometric rescue and is
+ * present in this finite reply set. Non-capturing counter-threats can still
+ * form longer forcing sequences without making capture legality recursive.
  */
-const immediateReplySet = (position: Position, protectedColor: Color): ImmediateReplySet => {
+const immediateReplySet = (
+  position: Position,
+  protectedColor: Color,
+  opponentDanger: PieceDanger[],
+): ImmediateReplySet => {
   const opponent = position.turn;
-  const opponentDanger = dangerReport(position, opponent);
   const replies = standardLegalMoves(position).map(move => {
     const after = position.clone();
     after.play(move);
@@ -254,6 +259,7 @@ export const analyzeMoves = (position: Position): MoveAssessment[] => {
       move,
       san: makeSan(position, move),
       afterDanger: dangerReport(after, mover),
+      opponentDanger: dangerReport(after, opposite(mover)),
     };
   });
   if (simulations.length === 0) return [];
@@ -266,18 +272,16 @@ export const analyzeMoves = (position: Position): MoveAssessment[] => {
   return simulations.map(simulation => {
     const immediateSafety = simulation.afterDanger.length <= threshold.ceiling;
     const actionable =
-      immediateSafety || simulation.captures
+      simulation.opponentDanger.length === 0
         ? {
             actionableDanger: simulation.afterDanger.map(danger => danger.squareName),
             forcingRescue: false,
           }
-        : immediateReplySet(simulation.after, mover);
-    const actionableSafety =
-      !immediateSafety &&
-      !simulation.captures &&
-      actionable.forcingRescue &&
-      actionable.actionableDanger.length <= threshold.ceiling;
-    const legal = immediateSafety || actionableSafety;
+        : immediateReplySet(simulation.after, mover, simulation.opponentDanger);
+    const actionableSafety = actionable.actionableDanger.length <= threshold.ceiling;
+    const moralIntermezzo =
+      !immediateSafety && !simulation.captures && actionable.forcingRescue && actionableSafety;
+    const legal = actionableSafety && (immediateSafety || moralIntermezzo);
     return {
       move: simulation.move,
       san: simulation.san,
@@ -285,11 +289,13 @@ export const analyzeMoves = (position: Position): MoveAssessment[] => {
       actionableDanger: actionable.actionableDanger,
       forcingRescue: actionable.forcingRescue,
       legal,
-      reason: actionableSafety
+      reason: moralIntermezzo
         ? 'legal-actionable-safety'
         : legal
           ? legalReason(threshold.policy)
-          : illegalReason(threshold.policy),
+          : immediateSafety && !actionableSafety
+            ? 'actionable-safety-required'
+            : illegalReason(threshold.policy),
       policy: threshold.policy,
       beforeDanger,
     };
